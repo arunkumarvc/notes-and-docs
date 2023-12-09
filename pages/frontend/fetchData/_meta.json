@@ -1,0 +1,6 @@
+{
+  "fetch": "Fetch",
+  "axios": "Axios",
+  "swr": "SWR",
+  "reactQuery": "React Query"
+}

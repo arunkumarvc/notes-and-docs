@@ -1,0 +1,31 @@
+{
+  "hardhat": "Hardhat",
+
+  "-- Ethers": {
+    "type": "separator",
+    "title": " "
+  },
+
+  "ethers": "Ethers",
+
+  "-- Solidity": {
+    "type": "separator",
+    "title": " "
+  },
+
+  "solidity": "Solidity",
+
+  "-- Connect Wallet": {
+    "type": "separator",
+    "title": " "
+  },
+
+  "client": "Connect Wallet",
+
+  "-- Blockchain Notes": {
+    "type": "separator",
+    "title": " "
+  },
+
+  "blockchainNotes": "Blockchain Notes"
+}

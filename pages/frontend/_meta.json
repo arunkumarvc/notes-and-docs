@@ -1,0 +1,19 @@
+{
+  "next": "Next.js",
+
+  "-- React": {
+    "type": "separator",
+    "title": " "
+  },
+
+  "react": "React",
+
+  "-- Fetch Data": {
+    "type": "separator",
+    "title": " "
+  },
+
+  "fetchData": "Fetch Data",
+
+  "redux": "Redux"
+}

@@ -1,0 +1,107 @@
+# React Query
+
+## Hooks for fetching, caching and updating asynchronous data in React, Solid, Svelte and Vue
+
+[React Query GitHub Link](https://github.com/TanStack/query)
+
+- React Query is often described as the missing data-fetching library for React, but in more technical terms, it makes **fetching, caching, synchronising and updating server state** in your React applications a breeze.
+- No need of state and useEffect
+- If we want to fetch the data to two different components we can use the fetch 2 times but we will get 2 different images or data and we are requesting 2 times. we can solve this by using fetch in the parent comp and pass it as a prop to the 2 child comp but using React Query is easy
+
+```zsh
+npm install react-query
+```
+
+1. Import
+   - `QueryClientProvider` is just a wrapper
+   - `QueryClient` is a client for the QueryClientProvider
+2. Create `QueryClientProvider`
+3. Create new `QueryClient`
+4. Import `useQuery`. used to query any information
+5. Create `UseQuery()`
+6. First one is a `Query key` it is just a string that will serve as a unique identifier for the request and main purpose is for caching
+
+   - If we use the same key in different components the fetch result will be same (here the dog images will be same)
+
+7. Second one is a function to `fetch` the data
+8. Config the QueryClient by defaultOptions and passing object and so that we can use the suspense
+9. Using the suspense
+
+```jsx filename="App.jsx" {2,8} showLineNumbers
+import "./App.css";
+import ReactQuery from "./main-components/ReactQuery";
+import Swr from "./main-components/Swr";
+
+function App() {
+  return (
+    <div className="App">
+      <ReactQuery />
+    </div>
+  );
+}
+
+export default App;
+```
+
+```jsx filename="ReactQuery.jsx" {2,8,10,11,19,21} showLineNumbers
+import React, { Suspense } from "react";
+import { QueryClientProvider, QueryClient } from "react-query"; /* 1 */
+import Dog1 from "../helper-components/Dog1";
+import Dog2 from "../helper-components/Dog2";
+
+function ReactQuery() {
+  /* 3 */
+  const client = new QueryClient({
+    /* 8 */
+    defaultOptions: {
+      queries: {
+        suspense: true,
+      },
+    },
+  });
+
+  return (
+    /* 2 */
+    <QueryClientProvider client={client}>
+      {/* 9 */}
+      <Suspense fallback={<h1> Loading...</h1>}>
+        <Dog1 />
+        <Dog2 />
+      </Suspense>
+    </QueryClientProvider>
+  );
+}
+
+export default ReactQuery;
+```
+
+```jsx filename="Fetchers.jsx" showLineNumbers
+export const getDog = () =>
+  fetch("https://random.dog/woof.json").then((res) => res.json());
+```
+
+```jsx filename="Dog1.jsx" {1,5} showLineNumbers
+import { useQuery } from "react-query"; /* 4 */
+import { getDog } from "../Fetchers";
+
+function Dog1() {
+  const { data } = useQuery("dog", getDog()); /* 5, 6 "dog", 7 getDog */
+
+  return <img src={data?.url} width={100} />;
+}
+
+export default Dog1;
+```
+
+```jsx filename="Dog2.jsx" showLineNumbers
+import { useQuery } from "react-query";
+import { getDog } from "../Fetchers";
+
+function Dog2() {
+  const { data } = useQuery("dog", getDog());
+
+  return <img src={data?.url} width={100} />;
+}
+
+export default Dog2;
+```

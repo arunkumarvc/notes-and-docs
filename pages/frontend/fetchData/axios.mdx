@@ -1,0 +1,53 @@
+# Axios
+
+## Promise based HTTP client for the browser and node.js
+
+[Axios GitHub Link](https://github.com/axios/axios)
+
+- Axios is a promise-based HTTP Client for node.js and the browser. It is isomorphic (it can run in the browser and nodejs with the same codebase). On the server-side it uses the native node.js http module, while on the client (browser) it uses XMLHttpRequests.
+
+```zsh
+npm install axios
+```
+
+1. Import axios
+2. Adding request method `GET` or `POST` .It will do the json() internally
+3. Once we have the data we can use it however we want.
+
+```jsx filename="App.jsx" {2,7} showLineNumbers
+import "./App.css";
+import Axios from "./main-components/Axios";
+
+function App() {
+  return (
+    <div className="App">
+      <Axios />
+    </div>
+  );
+}
+
+export default App;
+```
+
+```jsx filename="Axios.jsx" {2,7} showLineNumbers
+import React, { useEffect, useState } from "react";
+import axios from "axios"; /* 1 */
+
+function Axios() {
+  const [data, setData] = useState(null);
+  useEffect(() => {
+    /* 2 */
+    axios.get("https://dog.ceo/api/breeds/image/random").then((resp) => {
+      /* 3 */
+      setData(resp.data.message);
+    });
+  }, []);
+  return (
+    <div>
+      <img width={500} src={data} />
+    </div>
+  );
+}
+
+export default Axios;
+```

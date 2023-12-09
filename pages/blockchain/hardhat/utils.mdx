@@ -1,0 +1,163 @@
+# Hardhat Helper, Verify and Task
+
+## Hardhat Helpers
+
+### Simple Storage
+
+```ts filename="helper-hardhat-config.ts"
+const networkConfig = {
+  31337: {
+    name: "localhost",
+  },
+  // Price Feed Address, values can be obtained at https://docs.chain.link/data-feeds/price-feeds/addresses
+  11155111: {
+    name: "sepolia",
+    ethUsdPriceFeed: "0x694AA1769357215DE4FAC081bf1f309aDC325306",
+  },
+};
+
+const developmentChains = ["hardhat", "localhost"];
+
+module.exports = {
+  networkConfig,
+  developmentChains,
+};
+```
+
+### FundMe
+
+```ts filename="helper-hardhat-config.ts"
+export interface networkConfigItem {
+  ethUsdPriceFeed?: string;
+  blockConfirmations?: number;
+}
+
+export interface networkConfigInfo {
+  [key: string]: networkConfigItem;
+}
+
+export const networkConfig: networkConfigInfo = {
+  localhost: {},
+  hardhat: {},
+  sepolia: {
+    ethUsdPriceFeed: "0x694AA1769357215DE4FAC081bf1f309aDC325306",
+    blockConfirmations: 6,
+  },
+};
+
+export const developmentChains = ["hardhat", "localhost"];
+
+// export const ethUsdPriceFeedAddress = "0x694AA1769357215DE4FAC081bf1f309aDC325306";
+```
+
+### Raffle
+
+```ts filename="helper-hardhat-config.ts"
+import { ethers } from "hardhat";
+
+export interface networkConfigItem {
+  name?: string;
+  subscriptionId?: string;
+  gasLane?: string;
+  keepersUpdateInterval?: string;
+  raffleEntranceFee?: string;
+  callbackGasLimit?: string;
+  vrfCoordinatorV2?: string;
+}
+
+export interface networkConfigInfo {
+  [key: number]: networkConfigItem;
+}
+
+export const networkConfig: networkConfigInfo = {
+  31337: {
+    name: "localhost",
+    subscriptionId: "588",
+    gasLane:
+      "0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c", // 30 gwei
+    keepersUpdateInterval: "30",
+    raffleEntranceFee: ethers.utils.parseEther("0.01"), // 0.01 ETH
+    callbackGasLimit: "500000", // 500,000 gas
+  },
+  11155111: {
+    name: "sepolia",
+    subscriptionId: "588",
+    gasLane:
+      "0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c", // 30 gwei
+    keepersUpdateInterval: "30",
+    raffleEntranceFee: ethers.utils.parseEther("0.01"), // 0.01 ETH
+    callbackGasLimit: "500000", // 500,000 gas
+    vrfCoordinatorV2: "0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625",
+  },
+  1: {
+    name: "mainnet",
+    keepersUpdateInterval: "30",
+  },
+};
+
+export const developmentChains = ["hardhat", "localhost"];
+export const VERIFICATION_BLOCK_CONFIRMATIONS = 6;
+export const frontEndContractsFile =
+  "../nextjs-smartcontract-lottery-fcc/constants/contractAddresses.json";
+export const frontEndAbiFile =
+  "../nextjs-smartcontract-lottery-fcc/constants/abi.json";
+```
+
+## Hardhat Verify
+
+```ts filename="utils/verify.ts"
+import { run } from "hardhat";
+
+async function verify(contractAddress: string, args: any[]) {
+  console.log("Verifying contract...");
+  try {
+    await run("verify:verify", {
+      address: contractAddress,
+      constructorArguments: args,
+    });
+  } catch (err) {
+    if (err instanceof Error) {
+      if (err.message.toLowerCase().includes("already verified")) {
+        console.log("Already verified!");
+      } else {
+        console.error(err);
+      }
+    }
+  }
+}
+
+export default verify;
+```
+
+## Hardhat Tasks
+
+```ts filename="task/all.ts"
+import { task } from "hardhat/config";
+
+task("accounts", "Prints the list of accounts", async (_taskArgs, hre) => {
+  const accounts = await hre.ethers.getSigners();
+  for (const account of accounts) {
+    console.log(account.address);
+  }
+});
+
+task(
+  "blockNumber",
+  "Prints the current block number",
+  async (_taskArgs, hre) => {
+    const blockNumber = await hre.ethers.provider.getBlockNumber();
+    console.log("Current block number: " + blockNumber);
+  },
+);
+
+task("balance", "Prints an account's balance")
+  .addParam("account", "The account's address")
+  .setAction(async (taskArgs, hre) => {
+    const balance = await hre.ethers.provider.getBalance(taskArgs.account);
+    console.log(hre.ethers.formatEther(balance), "ETH");
+  });
+
+task("hello", "Prints a greeting")
+  .addOptionalParam("greeting", "The greeting to print", "Hello, World!")
+  .setAction(async ({ greeting }) => console.log(greeting));
+```

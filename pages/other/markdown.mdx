@@ -1,0 +1,482 @@
+import { Cards, Card, Callout, FileTree, Steps, Tabs } from "nextra/components";
+import { SiSolidity } from "react-icons/si";
+
+# Markdown
+
+### CodeBlock
+
+#### Inlined Code
+
+<Tabs items={["Result", "Code",]}>
+<Tabs.Tab>
+
+Inlined Code `let x = 1{:jsx}` example.
+
+`.mdx`
+
+</Tabs.Tab>
+
+<Tabs.Tab>
+
+```mdx filename="Markdown"
+Inlined Code `let x = 1{:jsx}` example.
+
+`.mdx`
+```
+
+</Tabs.Tab>
+</Tabs>
+
+#### Highlighting Lines
+
+<Tabs items={["Result", "Code",]}>
+<Tabs.Tab>
+
+```js {1,4-5}
+import { useState } from "react";
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  return <button onClick={() => setCount(count + 1)}>{count}</button>;
+}
+```
+
+</Tabs.Tab>
+
+<Tabs.Tab>
+
+````mdx filename="Markdown"
+```js {1,4-5}
+import { useState } from "react";
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  return <button onClick={() => setCount(count + 1)}>{count}</button>;
+}
+```
+````
+
+</Tabs.Tab>
+</Tabs>
+
+#### Highlighting Substrings
+
+<Tabs items={["Result", "Code",]}>
+<Tabs.Tab>
+
+```js /useState/
+import { useState } from "react";
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  return <button onClick={() => setCount(count + 1)}>{count}</button>;
+}
+```
+
+</Tabs.Tab>
+
+<Tabs.Tab>
+
+````mdx filename="Markdown"
+```js /useState/
+import { useState } from "react";
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  return <button onClick={() => setCount(count + 1)}>{count}</button>;
+}
+```
+````
+
+</Tabs.Tab>
+</Tabs>
+
+<Tabs items={["Result", "Code",]}>
+<Tabs.Tab>
+
+```mdx filename="Markdown"
+showLineNumbers copy filename="example.js" {1,6}
+```
+
+</Tabs.Tab>
+
+<Tabs.Tab>
+
+````mdx filename="Markdown"
+```mdx filename="Markdown"
+showLineNumbers copy filename="example.js" {1,6}
+```
+````
+
+</Tabs.Tab>
+</Tabs>
+
+### Text
+
+<Tabs items={["Result", "Code",]}>
+<Tabs.Tab>
+  _italics_
+  **bold**
+  **_bold and italics_**
+  ~~removed~~
+  
+  
+  > Block quotes
+  
+  Line <br /> breaks.
+  
+  1. Ordered lists
+  2. Ordered lists
+  
+  - Unordered lists
+  - Nested lists
+</Tabs.Tab>
+<Tabs.Tab>
+
+```mdx filename="Markdown"
+_italics_
+**bold**
+**_bold and italics_**
+~~removed~~
+
+> Block quotes
+
+Line <br /> breaks.
+
+1. Ordered lists
+2. Ordered lists
+
+- Unordered lists
+  - Nested lists
+```
+
+</Tabs.Tab>
+</Tabs>
+
+### Tables, Checkbox and Line
+
+<Tabs items={["Result", "Code",]}>
+<Tabs.Tab>
+
+| Tables | Tables | Tables |
+| :----- | :----: | -----: |
+| Text   |  Text  |   Text |
+
+- [x] Checkbox
+- [ ] Checkbox
+
+---
+
+</Tabs.Tab>
+
+<Tabs.Tab>
+
+```mdx filename="Markdown"
+| Tables | Tables | Tables |
+| :----- | :----: | -----: |
+| Text   |  Text  |   Text |
+
+- [x] Checkbox
+- [ ] Checkbox
+
+---
+```
+
+</Tabs.Tab>
+</Tabs>
+
+### Links
+
+<Tabs items={["Result", "Code",]}>
+<Tabs.Tab>
+
+[Next.js](https://nextjs.org)
+
+https://nextjs.org
+
+</Tabs.Tab>
+
+<Tabs.Tab>
+
+```mdx filename="Markdown"
+[Next.js](https://nextjs.org)
+
+https://nextjs.org
+```
+
+</Tabs.Tab>
+</Tabs>
+
+### Image and Video
+
+<Tabs items={["Result", "Code",]}>
+<Tabs.Tab>
+
+![Image](/assets/og-image.jpg)
+
+---
+
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/gyMwXuJrbJQ?si=-q2CQ1Jt7AeX0Ce9"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  allowfullscreen
+></iframe>
+
+</Tabs.Tab>
+
+<Tabs.Tab>
+
+```mdx filename="Markdown"
+![Image](/assets/og-image-1.jpg)
+
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/gyMwXuJrbJQ?si=-q2CQ1Jt7AeX0Ce9"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  allowfullscreen
+></iframe>
+```
+
+</Tabs.Tab>
+</Tabs>
+
+### npm2yarn
+
+<Tabs items={["Result", "Code",]}>
+<Tabs.Tab>
+
+```sh npm2yarn
+npm i -D hardhat
+```
+
+</Tabs.Tab>
+
+<Tabs.Tab>
+
+````mdx filename="Markdown"
+```sh npm2yarn
+npm i -D hardhat
+```
+````
+
+</Tabs.Tab>
+</Tabs>
+
+### Tab
+
+<Tabs items={["yarn", "npm", , "pnpm"]}>
+  <Tabs.Tab>**Yarn**: command.</Tabs.Tab>
+  <Tabs.Tab>**npm**: command.</Tabs.Tab>
+  <Tabs.Tab>**pnpm**: command.</Tabs.Tab>
+</Tabs>
+
+```mdx filename="Markdown"
+import { Tabs } from "nextra/components";
+
+<Tabs items={["yarn", "npm", , "pnpm"]}>
+  <Tabs.Tab>**Yarn**: command.</Tabs.Tab>
+  <Tabs.Tab>**npm**: command.</Tabs.Tab>
+  <Tabs.Tab>**pnpm**: command.</Tabs.Tab>
+</Tabs>
+```
+
+### Card
+
+<Tabs items={["Result", "Code",]}>
+<Tabs.Tab>
+
+<Cards>
+  <Card icon={<SiSolidity />} title="Solidity" href="#" />
+</Cards>
+
+</Tabs.Tab>
+
+<Tabs.Tab>
+
+```mdx filename="Markdown"
+import { Cards, Card } from "nextra/components";
+import { SiSolidity } from "react-icons/si";
+
+<Cards>
+  <Card icon={<SiSolidity />} title="Solidity" href="#" />
+</Cards>
+```
+
+</Tabs.Tab>
+</Tabs>
+
+### Callout
+
+<Tabs items={["Result", "Code",]}>
+<Tabs.Tab>
+
+<Callout>**Default** Style.</Callout>
+
+<Callout type="info"> **Info** Style.</Callout>
+
+<Callout type="warning">**Warning** Style.</Callout>
+
+<Callout type="error"> **Error** Style.</Callout>
+
+</Tabs.Tab>
+
+<Tabs.Tab>
+
+```mdx filename="Markdown"
+import { Callout } from "nextra/components";
+
+<Callout>**Default** Style.</Callout>
+
+<Callout type="info"> **Info** Style.</Callout>
+
+<Callout type="warning">**Warning** Style.</Callout>
+
+<Callout type="error"> **Error** Style.</Callout>
+```
+
+</Tabs.Tab>
+</Tabs>
+
+### Steps
+
+<Tabs items={["Result", "Code",]}>
+<Tabs.Tab>
+
+<Steps>
+#### Step 1
+
+Contents for step 1.
+
+#### Step 2
+
+Contents for step 2.
+
+</Steps>
+
+</Tabs.Tab>
+
+<Tabs.Tab>
+
+```mdx filename="Markdown"
+import { Steps } from "nextra/components";
+
+<Steps>
+#### Step 1
+
+Contents for step 1.
+
+#### Step 2
+
+Contents for step 2.
+
+</Steps>
+```
+
+</Tabs.Tab>
+</Tabs>
+
+### File Tree
+
+<Tabs items={["Result", "Code",]}>
+<Tabs.Tab>
+
+<FileTree>
+  <FileTree.Folder name="src" defaultOpen>
+    <FileTree.File name="_meta.json" />
+    <FileTree.File name="contact.md" active />
+    <FileTree.Folder name="about">
+      <FileTree.File name="index.mdx" />
+    </FileTree.Folder>
+  </FileTree.Folder>
+</FileTree>
+
+</Tabs.Tab>
+
+<Tabs.Tab>
+
+```mdx filename="Markdown"
+import { FileTree } from "nextra/components";
+
+<FileTree>
+  <FileTree.Folder name="src" defaultOpen>
+    <FileTree.File name="_meta.json" />
+    <FileTree.File name="contact.md" active />
+    <FileTree.Folder name="about">
+      <FileTree.File name="index.mdx" />
+    </FileTree.Folder>
+  </FileTree.Folder>
+</FileTree>
+```
+
+</Tabs.Tab>
+</Tabs>
+
+### Bleed
+
+<Tabs items={["Result", "Code",]}>
+<Tabs.Tab>
+ <div className="border bg-white px-16 py-10 text-center dark:bg-neutral-800">
+    When wrapping your content with **Bleed**, it will be slightly wider than
+    the container and will overflow on both sides.
+  </div>
+
+</Tabs.Tab>
+
+<Tabs.Tab>
+
+```mdx filename="Markdown"
+import { Bleed } from "nextra-theme-docs";
+
+<Bleed>
+  <div className="border bg-white px-16 py-10 text-center dark:bg-neutral-800">
+    When wrapping your content with **Bleed**, it will be slightly wider than
+    the container and will overflow on both sides.
+  </div>
+</Bleed>
+```
+
+</Tabs.Tab>
+</Tabs>
+
+### Details disclosure
+
+export function Box({ title, children }) {
+  return (
+    <details
+      open
+      className="mt-6 rounded-lg bg-neutral-50 p-4 dark:bg-neutral-800"
+    >
+      <summary>
+        <strong className="text-lg">{title}</strong>
+      </summary>
+      <div className="p-2">{children}</div>
+    </details>
+  );
+}
+
+<Box title="Heading">Text</Box>
+
+```mdx filename="Markdown"
+export function Box({ title, children }) {
+  return (
+    <details
+      open
+      className="mt-6 rounded-lg bg-neutral-50 p-4 dark:bg-neutral-800"
+    >
+      <summary>
+        <strong className="text-lg">{title}</strong>
+      </summary>
+      <div className="p-2">{children}</div>
+    </details>
+  );
+}
+
+<Box title="Heading">Text</Box>;
+```

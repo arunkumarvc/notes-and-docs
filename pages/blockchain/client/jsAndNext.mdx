@@ -1,0 +1,133 @@
+# Connect Wallet
+
+## Vanilla JS
+
+[GitHub Link](https://github.com/arunkumarvc/Simple-Fund-Me-App-frontend)
+
+```js filename="connect.js"
+import { ethers } from "./ethers-5.2.esm.min.js";
+import { abi, contractAddress } from "./constants.js";
+
+// Connect Metamask
+async function connect() {
+  if (typeof window.ethereum !== "undefined") {
+    console.log("MetaMask is installed!");
+    try {
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      console.log("Connected!");
+    } catch (error) {
+      console.log(error.message);
+    }
+  } else {
+    console.log("Please install MetaMask!");
+  }
+}
+
+// Get Balance
+async function getBalance() {
+  if (typeof window.ethereum !== "undefined") {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const balance = await provider.getBalance(contractAddress);
+    console.log(`Contract Balance is : ${ethers.utils.formatEther(balance)}`);
+  }
+}
+
+//  Call Function
+async function withdraw() {
+  if (typeof window.ethereum !== "undefined") {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const contract = new ethers.BaseContract(contractAddress, abi, signer);
+
+    try {
+      const transactionResponse = await contract.withdraw();
+      await listenForTransactionMine(transactionResponse, provider);
+    } catch (error) {
+      console.log(error.message);
+    }
+  }
+}
+
+// Event called once
+function listenForTransactionMine(transactionResponse, provider) {
+  console.log(`Mining ${transactionResponse.hash}...`);
+
+  return new Promise((resolve, reject) => {
+    provider.once(transactionResponse.hash, (transactionReceipt) => {
+      // Emitted when the transaction has been mined
+      console.log(
+        `Completed with ${transactionReceipt.confirmations} confirmations`,
+      );
+      resolve();
+    });
+  });
+}
+```
+
+## Next.js
+
+[GitHub Link](https://github.com/PatrickAlphaC/full-stack-web3-metamask-connectors)
+
+```jsx filename="connect.jsx"
+import { ethers } from "ethers";
+import { useEffect, useState } from "react";
+
+export default function Home() {
+  const [isConnected, setIsConnected] = useState(false); // 1 Connected to Metamask wallet?
+  const [hasMetamask, setHasMetamask] = useState(false); // 2 Has Metamask?
+  const [signer, setSigner] = useState(undefined); // 3 Signer
+
+  useEffect(() => {
+    if (typeof window.ethereum !== "undefined") {
+      setHasMetamask(true); // 2
+    }
+  });
+
+  async function connect() {
+    if (typeof window.ethereum !== "undefined") {
+      try {
+        await ethereum.request({ method: "eth_requestAccounts" });
+        setIsConnected(true); // 1
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        setSigner(provider.getSigner()); // 3
+      } catch (e) {
+        console.log(e);
+      }
+    } else {
+      setIsConnected(false); // 1
+    }
+  }
+
+  async function execute() {
+    if (typeof window.ethereum !== "undefined") {
+      const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+      const abi = [];
+
+      const contract = new ethers.Contract(contractAddress, abi, signer);
+      try {
+        await contract.store(42);
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      console.log("Please install MetaMask");
+    }
+  }
+
+  return (
+    <div>
+      {hasMetamask ? (
+        isConnected ? (
+          "Connected! "
+        ) : (
+          <button onClick={() => connect()}>Connect</button>
+        )
+      ) : (
+        "Please install metamask"
+      )}
+
+      {isConnected && <button onClick={() => execute()}>Execute</button>}
+    </div>
+  );
+}
+```

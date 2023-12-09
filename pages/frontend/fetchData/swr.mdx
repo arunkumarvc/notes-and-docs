@@ -1,0 +1,81 @@
+# SWR - Stale While Revalidate
+
+## SWR is a React Hooks library for data fetching.
+
+[SWR GitHub Link](https://github.com/vercel/swr)
+
+- SWR is an open source, lightweight, and TypeScript-ready library that offers several Hooks for fetching data in React with caching.
+- No need to use the useEffect or useState because all are built into the library
+
+```zsh
+npm install swr
+```
+
+1. Import `useSWR`
+2. Add the API **URL link**
+
+   - The useSWR is not making the request for you, it’s just handling data for you and make it rally easy and reliable for you to display that data in the ui
+
+   - **fetcher** is function used to organise the data when it receives it
+
+3. We can use any method to fetch the data. here we are using the **fetch**
+
+   - ...args is the below url and we are fetching the data using the fetch api
+
+   - Advantage of using the swr is we don't need to use the state and useEffect
+
+4. **Suspense** is a builtin component in react.
+
+   - While fetching the data (data.message) it will take few mili second to load or arrive, in that time the data will be null (null.message), so we use the suspense to show the error message.
+
+   - We wrap the component inside the suspense component.
+
+   - Using the fallback we are telling if any error occurred while fetching the data render the fallback
+
+```jsx filename="App.jsx" {1,3,8,9} showLineNumbers
+import { Suspense } from "react";
+import "./App.css";
+import Swr from "./main-components/Swr";
+
+function App() {
+  return (
+    <div className="App">
+      <Suspense fallback={<h1> Loading...</h1>}>
+        <Swr />
+      </Suspense>
+    </div>
+  );
+}
+
+export default App;
+```
+
+```jsx filename="Swr.jsx" {2,4,8,12} showLineNumbers
+import React, { useEffect, useState } from "react";
+import useSWR from "swr"; /* 1 */
+
+const fetcher = (...args) => fetch(...args).then((resp) => resp.json()); /* 3 */
+
+function Swr() {
+  /* 2 */
+  const { data, error } = useSWR(
+    "https://dog.ceo/api/breeds/image/random",
+    fetcher,
+    {
+      suspense: true /* 4 */,
+    },
+  );
+
+  if (error) {
+    return <h1> There was an error!</h1>;
+  }
+
+  return (
+    <div>
+      <img width={500} src={data.message} />
+    </div>
+  );
+}
+
+export default Swr;
+```

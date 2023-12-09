@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+input[type="search"] {
+  @apply placeholder:opacity-60 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:dark:bg-[#F9FAFB]/10;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply !text-gray-200;
+}
+
+p,
+ui,
+li,
+table {
+  @apply font-medium !text-[#B0B2B5];
+}

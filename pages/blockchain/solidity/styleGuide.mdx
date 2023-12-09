@@ -1,0 +1,75 @@
+# Solidity Style Guide
+
+[Solidity Docs](https://docs.soliditylang.org/en/latest/style-guide.html)
+
+### Order of Functions
+
+- constructor
+- receive function (if exists)
+- fallback function (if exists)
+- external
+- public
+- internal
+- private
+
+Within a grouping, place the `view` and `pure` functions last.
+
+The modifier order for a function should be:
+
+1. Visibility
+2. Mutability
+3. Virtual
+4. Override
+5. Custom modifiers
+
+### Order of Layout
+
+Contract elements should be laid out in the following order:
+
+1. Pragma statements
+2. Import statements
+3. Events
+4. Errors
+5. Interfaces
+6. Libraries
+7. Contracts
+
+Inside each contract, library or interface, use the following order:
+
+1. Type declarations
+2. State variables
+3. Events
+4. Errors
+5. Modifiers
+6. Functions
+
+### Naming Conventions
+
+#### PascalCase
+
+- Contracts and libraries
+- Struct
+- Event
+- Enums
+
+#### CamelCase
+
+- Function and Function Argument
+- Local and State Variable
+- Modifier
+
+#### UPPERCASE
+
+- Constants
+
+#### \_singleLeadingUnderscore
+
+- Non-external Functions and Variables (private or internal).
+
+#### singleTrailingUnderscore\_
+
+- This convention is suggested when the desired name collides with that of an existing state variable, function, built-in or otherwise reserved name.
+
+### NatSpec
+
+Annotate NatSpec for all public interfaces (everything in the ABI).

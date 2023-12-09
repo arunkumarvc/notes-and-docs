@@ -1,0 +1,9 @@
+## Manual Getter Function
+
+Why should we make a Solidity state variable private and create a getter function?
+
+- **Security**: Making state variables private **prevents them from being directly modified by external contracts or users.** This can help to protect your contract from accidental or malicious changes.
+
+- **Encapsulation**: Encapsulation is the process of hiding the implementation details of a contract from its users. By making state variables private and only exposing them through getter functions, you can **encapsulate your contract's internal logic and make it more difficult for users to misuse it.**
+
+- **Flexibility**: Getter functions **can be used to implement additional logic, such as checking permissions or validating input values.** This can help to make your contract more secure and reliable.

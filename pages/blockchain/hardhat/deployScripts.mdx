@@ -1,0 +1,142 @@
+# Deploy Scripts
+
+## All Deploy Code
+
+```ts filename="deploy.ts"
+import { ethers, network } from "hardhat";
+import verify from "../Utilities/verify";
+
+async function main() {
+  // signers or runners or accounts
+  const [deployer, addr1, addr2] = await ethers.getSigners();
+
+  // contract address or runner address
+  const deployerAddress = await deployer.getAddress();
+  const contractAddress = await simpleStorage.getAddress();
+
+  // Deploy
+  const simpleStorage = await ethers.deployContract("SimpleStorage", [args]);
+  await simpleStorage.waitForDeployment();
+
+  // get contract using interface and address
+  const contract = await ethers.getContractAt("interface", contractAddress);
+
+  // connect different runner or signer
+  await reentrance.connect(addr1).donate();
+
+  // Balance
+  let balance = await ethers.provider.getBalance(reentranceAddress);
+
+  // verify
+  if (network.config.chainId === 11155111 && process.env.ETHERSCAN_API_KEY) {
+    await simpleStorage.deploymentTransaction()?.wait(6);
+    await verify(simpleStorageAddress, []);
+  }
+
+  // Verify using helper-hardhat-config.ts
+  if (
+    !developmentChains.includes(network.name) &&
+    process.env.ETHERSCAN_API_KEY
+  ) {
+    log("Verifying...");
+    await verify(raffle.address, args);
+  }
+
+  // Make transaction and wait to mine
+  const transactionResponse = await simpleStorage.store("7");
+  const transactionReceipt = await transactionResponse.wait();
+  // Gas used for above transaction
+  const { gasPrice, gasUsed } = transactionReceipt!;
+  const gasCost = gasPrice * gasUsed;
+}
+
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+```
+
+```zsh
+yarn hardhat run scripts/deploy.ts
+```
+
+## Simple Storage Deploy
+
+```ts filename="deploy.ts"
+import { ethers, network } from "hardhat";
+import verify from "../Utilities/verify";
+
+async function main() {
+  const [deployer] = await ethers.getSigners();
+  console.log(
+    "Deploying contracts with the account:",
+    await deployer.getAddress(),
+  );
+
+  console.log("Deploying contract...");
+  const simpleStorage = await ethers.deployContract("SimpleStorage");
+  await simpleStorage.waitForDeployment();
+
+  const simpleStorageAddress = await simpleStorage.getAddress();
+  console.log("SimpleStorage contract address:", simpleStorageAddress);
+
+  if (network.config.chainId === 11155111 && process.env.ETHERSCAN_API_KEY) {
+    await simpleStorage.deploymentTransaction()?.wait(6);
+    await verify(simpleStorageAddress, []);
+  }
+
+  let currentValue = await simpleStorage.retrieve();
+  console.log(`Current value is: ${currentValue}`);
+
+  console.log("Updating contract...");
+  let transactionResponse = await simpleStorage.store(7);
+  await transactionResponse.wait();
+
+  currentValue = await simpleStorage.retrieve();
+  console.log(`Current value is: ${currentValue}`);
+}
+
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+```
+
+## FundMe Deploy
+
+```ts filename="deploy.ts"
+import { ethers } from "hardhat";
+import { ethUsdPriceFeedAddress } from "../helper-hardhat-config";
+
+async function main() {
+  const [deployer] = await ethers.getSigners();
+  console.log(
+    "Deploying contracts with the account:",
+    await deployer.getAddress(),
+  );
+
+  const fundMe = await ethers.deployContract("FundMe", [
+    ethUsdPriceFeedAddress,
+  ]);
+  await fundMe.waitForDeployment();
+  console.log("FundMe address:", await fundMe.getAddress());
+  console.log("Contract deployed successfully!");
+}
+
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+```
+
+## Raffle Deploy
+
+```ts filename="deploy.ts"
+
+```

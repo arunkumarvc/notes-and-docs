@@ -1,0 +1,515 @@
+# Hardhat Test
+
+## Test Codes
+
+### Describe Skip
+
+```ts
+!developmentChains.includes(network.name)
+  ? describe.skip
+  : describe("Raffle", function () {});
+```
+
+### Expect
+
+```ts
+expect().to.equal();
+
+expect().to.be.reverted;
+expect().not.to.be.reverted;
+expect().to.be.revertedWith("");
+await expect().to.be.revertedWithCustomError(contract, "");
+
+expect().to.emit(lock, "Withdrawal").withArgs(lockedAmount, anyValue);
+
+expect(lock.withdraw()).to.changeEtherBalances(
+  [owner, lock],
+  [lockedAmount, -lockedAmount],
+);
+
+expect("response or result").to.equal("expected Value or known answer");
+```
+
+### Assert
+
+```ts
+assert.equal(foo, "bar");
+```
+
+### Terminal
+
+```zsh
+yarn hardhat test
+yarn hardhat test --grep word
+```
+
+### AAA Pattern
+
+The AAA (Arrange, Act, Assert) pattern is a common practice for structuring unit tests. It improves readability, maintainability, and reusability. Each test is divided into three sections:
+
+1. Arrange: In this section, you set up the state needed for your test. The variables or function needed of the Act and Assert's expected output
+2. Act: In this section, you call the code you are testing.
+3. Assert: In this section, you verify that the actual output of your code matches the expected output.
+
+- Adding it.only will test only that code
+
+## SimpleStorage Test
+
+### Unit Test
+
+```ts filename="simpleStorage.test.ts"
+import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import { expect } from "chai";
+import { ethers } from "hardhat";
+
+describe("SimpleStorage", function () {
+  async function deploySimpleStorageFixture() {
+    const [deployer, addr1] = await ethers.getSigners();
+
+    const simpleStorage = await ethers.deployContract("SimpleStorage");
+    await simpleStorage.waitForDeployment();
+
+    return { simpleStorage, deployer, addr1 };
+  }
+
+  it("Should start wih a favorite number of 0", async function () {
+    const { simpleStorage } = await loadFixture(deploySimpleStorageFixture);
+    const expectedValue = "0";
+    const currentValue = await simpleStorage.retrieve();
+
+    expect(currentValue).to.equal(expectedValue);
+  });
+
+  it("Should update when we call store", async function () {
+    const { simpleStorage } = await loadFixture(deploySimpleStorageFixture);
+    // Arrange: In this section, you set up the state needed for your test. The variables or function needed of the Act and Assert's expected output
+    const expectedValue = "7";
+
+    // Act: In this section, you call the code you are testing.
+    const txRes = await simpleStorage.store("7");
+    await txRes.wait();
+    const currentValue = await simpleStorage.retrieve();
+
+    // Assert: In this section, you verify that the actual output of your code matches the expected output.
+    expect(currentValue.toString()).to.equal(expectedValue);
+  });
+
+  it("Should work correctly with the people struct and array", async function () {
+    const { simpleStorage } = await loadFixture(deploySimpleStorageFixture);
+    const expectedPersonName = "Bob";
+    const expectedFavoriteNumber = "20";
+
+    const txRes = await simpleStorage.addPerson(
+      expectedPersonName,
+      expectedFavoriteNumber,
+    );
+    await txRes.wait();
+    const { favoriteNumber, name } = await simpleStorage.people(0);
+
+    expect(name).to.equal(expectedPersonName);
+    expect(favoriteNumber).to.equal(expectedFavoriteNumber);
+  });
+});
+```
+
+## FundMe Test
+
+### Unit Test
+
+```ts filename="fundMe.test.ts"
+import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
+import { ethUsdPriceFeedAddress } from "../../helper-hardhat-config";
+import { expect } from "chai";
+import { ethers, network } from "hardhat";
+
+network.config.chainId === 11155111
+  ? describe.skip
+  : describe("FundMe", function () {
+      async function deployFundMeFixture() {
+        const [deployer, addr1] = await ethers.getSigners();
+        const deployerAddress = await deployer.getAddress();
+
+        const fundMe = await ethers.deployContract("FundMe", [
+          ethUsdPriceFeedAddress,
+        ]);
+        await fundMe.waitForDeployment();
+        const aggregatorV3 = await ethers.getContractAt(
+          "AggregatorV3Interface",
+          ethUsdPriceFeedAddress,
+        );
+
+        return { deployer, addr1, deployerAddress, fundMe, aggregatorV3 };
+      }
+
+      describe("Deployment", function () {
+        it("Should set the right aggregator address", async function () {
+          const { fundMe, aggregatorV3 } =
+            await loadFixture(deployFundMeFixture);
+          expect(await fundMe.getPriceFeed()).to.equal(
+            await aggregatorV3.getAddress(),
+          );
+        });
+
+        it("Should set the right owner", async function () {
+          const { fundMe, deployerAddress } =
+            await loadFixture(deployFundMeFixture);
+          expect(await fundMe.getOwner()).to.equal(deployerAddress);
+        });
+      });
+
+      describe("fund", function () {
+        it("Should fail if we don't send enough ETH", async function () {
+          const { fundMe } = await loadFixture(deployFundMeFixture);
+
+          await expect(fundMe.fund({ value: ethers.parseEther("0.01") }))
+            .to.be.revertedWithCustomError(fundMe, "FundMe__NeedMoreETH")
+            .withArgs(anyValue, ethers.parseEther("50"));
+        });
+
+        it("Shouldn't fail if the amount sent is $50 USD", async function () {
+          const { fundMe } = await loadFixture(deployFundMeFixture);
+
+          await expect(fundMe.fund({ value: ethers.parseEther("0.04") })).not.to
+            .be.reverted;
+        });
+
+        it("Should add the amount funded to mapping", async function () {
+          const { fundMe, deployerAddress } =
+            await loadFixture(deployFundMeFixture);
+
+          await fundMe.fund({ value: ethers.parseEther("1") });
+          const response =
+            await fundMe.getAddressToAmountFunded(deployerAddress);
+
+          expect(response).to.equal(ethers.parseEther("1"));
+        });
+
+        it("Should add funder to funders array", async function () {
+          const { fundMe, deployerAddress } =
+            await loadFixture(deployFundMeFixture);
+
+          await fundMe.fund({ value: ethers.parseEther("1") });
+          const response = await fundMe.getFunder("0");
+
+          expect(response).to.equal(deployerAddress);
+        });
+
+        it("Should call receive() and then fund() if we send ETH directly to contract address", async function () {
+          const { fundMe, deployer, deployerAddress } =
+            await loadFixture(deployFundMeFixture);
+
+          const fundMeAddress = await fundMe.getAddress();
+
+          const startingFundMeBalance =
+            await ethers.provider.getBalance(fundMeAddress);
+
+          const tx = {
+            to: fundMeAddress,
+            value: ethers.parseEther("16"),
+          };
+          await deployer.sendTransaction(tx);
+          const endingFundMeBalance =
+            await ethers.provider.getBalance(fundMeAddress);
+
+          expect(startingFundMeBalance).to.equal(0);
+          expect(endingFundMeBalance).to.equal(ethers.parseEther("16"));
+          expect(
+            await fundMe.getAddressToAmountFunded(deployerAddress),
+          ).to.equal(ethers.parseEther("16"));
+        });
+      });
+
+      describe("withdraw", function () {
+        it("Should allow single funder to withdraw all their ETH", async function () {
+          const { fundMe, deployerAddress } =
+            await loadFixture(deployFundMeFixture);
+
+          const fundMeAddress = await fundMe.getAddress();
+
+          await fundMe.fund({ value: ethers.parseEther("5") });
+
+          const startingDeployerBalance =
+            await ethers.provider.getBalance(deployerAddress);
+          const startingFundMeBalance =
+            await ethers.provider.getBalance(fundMeAddress);
+
+          const transactionResponse = await fundMe.withdraw();
+          const transactionReceipt = await transactionResponse.wait();
+          const { gasPrice, gasUsed } = transactionReceipt!;
+          const gasCost = gasPrice * gasUsed;
+
+          const endingDeployerBalance =
+            await ethers.provider.getBalance(deployerAddress);
+          const endingFundMeBalance =
+            await ethers.provider.getBalance(fundMeAddress);
+
+          expect(endingFundMeBalance).to.equal("0");
+          expect(startingFundMeBalance + startingDeployerBalance).to.equal(
+            endingDeployerBalance + gasCost,
+          );
+        });
+
+        it("Should allow us to withdraw with multiple funders", async function () {
+          const { fundMe, deployerAddress } =
+            await loadFixture(deployFundMeFixture);
+          const accounts = await ethers.getSigners();
+
+          await fundMe.fund({ value: ethers.parseEther("1") });
+          await fundMe
+            .connect(accounts[1])
+            .fund({ value: ethers.parseEther("1") });
+          await fundMe
+            .connect(accounts[2])
+            .fund({ value: ethers.parseEther("1") });
+          await fundMe
+            .connect(accounts[3])
+            .fund({ value: ethers.parseEther("1") });
+          await fundMe
+            .connect(accounts[4])
+            .fund({ value: ethers.parseEther("1") });
+
+          const startingDeployerBalance =
+            await ethers.provider.getBalance(deployerAddress);
+          const startingFundMeBalance = await ethers.provider.getBalance(
+            await fundMe.getAddress(),
+          );
+          // console.log("startingDeployerBalance", ethers.formatEther(startingDeployerBalance));
+          // console.log("startingFundMeBalance", ethers.formatEther(startingFundMeBalance));
+
+          const transactionResponse = await fundMe.withdraw();
+          const transactionReceipt = await transactionResponse.wait();
+          const { gasPrice, gasUsed } = transactionReceipt!;
+          const gasCost = gasPrice * gasUsed;
+
+          const endingDeployerBalance =
+            await ethers.provider.getBalance(deployerAddress);
+          const endingFundMeBalance = await ethers.provider.getBalance(
+            await fundMe.getAddress(),
+          );
+          // console.log("endingDeployerBalance", ethers.formatEther(endingDeployerBalance));
+          // console.log("endingFundMeBalance", ethers.formatEther(endingFundMeBalance));
+
+          expect(startingFundMeBalance + startingDeployerBalance).to.equal(
+            endingDeployerBalance + gasCost,
+          );
+
+          await expect(fundMe.getFunder(0)).to.be.reverted;
+        });
+
+        it("Should fail if non-owner tries to withdraw ETH", async function () {
+          const { fundMe, addr1 } = await loadFixture(deployFundMeFixture);
+          await fundMe.fund({ value: ethers.parseEther("12") });
+
+          await expect(
+            fundMe.connect(addr1).withdraw(),
+          ).to.be.revertedWithCustomError(fundMe, "FundMe__NotOwner");
+        });
+
+        it("reverts when withdraw fails", async () => {
+          const failingRecipient = await ethers.deployContract(
+            "FailingRecipient",
+            [ethUsdPriceFeedAddress],
+            {
+              value: ethers.parseEther("30"),
+            },
+          );
+          await failingRecipient.waitForDeployment();
+
+          // const failingRecipientAddress = await failingRecipient.getAddress();
+          // console.log("failingRecipientAddress:", failingRecipientAddress);
+
+          // const startingFailingRecipientBalance = await ethers.provider.getBalance(failingRecipient);
+          // console.log("Starting FailingRecipientBalance Balance:", startingFailingRecipientBalance);
+
+          // const startingFundMeBalance = await failingRecipient.getFundMeBalance();
+          // console.log("Starting FundMe Balance:", startingFundMeBalance);
+
+          const fundMeAddress = await failingRecipient.getFundMeAddress();
+          const fundMeContract = await ethers.getContractAt(
+            "FundMe",
+            fundMeAddress,
+          );
+          // console.log("FundMe Address:", fundMeAddress);
+
+          await failingRecipient.fundEth();
+
+          // const endingFundMeBalance = await failingRecipient.getFundMeBalance();
+          // console.log("Ending FundMe Balance:", endingFundMeBalance);
+
+          // const endingFailingRecipientBalance = await ethers.provider.getBalance(failingRecipient);
+          // console.log("Ending FailingRecipientBalance Balance:", endingFailingRecipientBalance);
+
+          await expect(
+            failingRecipient.withdrawEth(),
+          ).to.be.revertedWithCustomError(fundMeContract, "FundMe__CallFailed");
+        });
+      });
+    });
+```
+
+### Staging Test
+
+```ts filename="fundMe.staging.test.ts"
+import { expect } from "chai";
+import { ethers, network } from "hardhat";
+
+network.config.chainId !== 11155111
+  ? describe.skip
+  : describe("FundMe Staging Tests", function () {
+      it("Should allow people to fund and withdraw", async function () {
+        const fundMeAddress = "0xfCa707c19D575Df84d64D64baF89083812732c2F";
+        const fundMe = await ethers.getContractAt("FundMe", fundMeAddress);
+
+        console.log(
+          `Sending ${ethers.parseEther("0.05")} ETH to FundMe contract`,
+        );
+        await fundMe.fund({ value: ethers.parseEther("0.05") });
+        const FundMeBalance = await ethers.provider.getBalance(fundMe);
+        console.log(`FundMe Balance ${FundMeBalance}`);
+
+        await fundMe.withdraw();
+
+        const endingFundMeBalance = await ethers.provider.getBalance(fundMe);
+        console.log(
+          "Ending FundMe Balance should be 0, running expect equal...",
+        );
+
+        expect(endingFundMeBalance).to.equal(0);
+      });
+    });
+```
+
+## Lock Test
+
+### Unit Test
+
+```ts filename="lock.test.ts"
+import {
+  time,
+  loadFixture,
+} from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
+import { expect } from "chai";
+import { ethers } from "hardhat";
+
+describe("Lock", function () {
+  // We define a fixture to reuse the same setup in every test.
+  // We use loadFixture to run this setup once, snapshot that state,
+  // and reset Hardhat Network to that snapshot in every test.
+  async function deployOneYearLockFixture() {
+    const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
+    const ONE_GWEI = 1_000_000_000;
+
+    const lockedAmount = ONE_GWEI;
+    const unlockTime = (await time.latest()) + ONE_YEAR_IN_SECS;
+
+    // Contracts are deployed using the first signer/account by default
+    const [owner, otherAccount] = await ethers.getSigners();
+
+    const Lock = await ethers.getContractFactory("Lock");
+    const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+
+    return { lock, unlockTime, lockedAmount, owner, otherAccount };
+  }
+
+  describe("Deployment", function () {
+    it("Should set the right unlockTime", async function () {
+      const { lock, unlockTime } = await loadFixture(deployOneYearLockFixture);
+
+      expect(await lock.unlockTime()).to.equal(unlockTime);
+    });
+
+    it("Should set the right owner", async function () {
+      const { lock, owner } = await loadFixture(deployOneYearLockFixture);
+
+      expect(await lock.owner()).to.equal(owner.address);
+    });
+
+    it("Should receive and store the funds to lock", async function () {
+      const { lock, lockedAmount } = await loadFixture(
+        deployOneYearLockFixture,
+      );
+
+      expect(await ethers.provider.getBalance(lock.target)).to.equal(
+        lockedAmount,
+      );
+    });
+
+    it("Should fail if the unlockTime is not in the future", async function () {
+      // We don't use the fixture here because we want a different deployment
+      const latestTime = await time.latest();
+      const Lock = await ethers.getContractFactory("Lock");
+      await expect(Lock.deploy(latestTime, { value: 1 })).to.be.revertedWith(
+        "Unlock time should be in the future",
+      );
+    });
+  });
+
+  describe("Withdrawals", function () {
+    describe("Validations", function () {
+      it("Should revert with the right error if called too soon", async function () {
+        const { lock } = await loadFixture(deployOneYearLockFixture);
+
+        await expect(lock.withdraw()).to.be.revertedWith(
+          "You can't withdraw yet",
+        );
+      });
+
+      it("Should revert with the right error if called from another account", async function () {
+        const { lock, unlockTime, otherAccount } = await loadFixture(
+          deployOneYearLockFixture,
+        );
+
+        // We can increase the time in Hardhat Network
+        await time.increaseTo(unlockTime);
+
+        // We use lock.connect() to send a transaction from another account
+        await expect(lock.connect(otherAccount).withdraw()).to.be.revertedWith(
+          "You aren't the owner",
+        );
+      });
+
+      it("Shouldn't fail if the unlockTime has arrived and the owner calls it", async function () {
+        const { lock, unlockTime } = await loadFixture(
+          deployOneYearLockFixture,
+        );
+
+        // Transactions are sent using the first signer by default
+        await time.increaseTo(unlockTime);
+
+        await expect(lock.withdraw()).not.to.be.reverted;
+      });
+    });
+
+    describe("Events", function () {
+      it("Should emit an event on withdrawals", async function () {
+        const { lock, unlockTime, lockedAmount } = await loadFixture(
+          deployOneYearLockFixture,
+        );
+
+        await time.increaseTo(unlockTime);
+
+        await expect(lock.withdraw())
+          .to.emit(lock, "Withdrawal")
+          .withArgs(lockedAmount, anyValue); // We accept any value as `when` arg
+      });
+    });
+
+    describe("Transfers", function () {
+      it("Should transfer the funds to the owner", async function () {
+        const { lock, unlockTime, lockedAmount, owner } = await loadFixture(
+          deployOneYearLockFixture,
+        );
+
+        await time.increaseTo(unlockTime);
+
+        await expect(lock.withdraw()).to.changeEtherBalances(
+          [owner, lock],
+          [lockedAmount, -lockedAmount],
+        );
+      });
+    });
+  });
+});
+```

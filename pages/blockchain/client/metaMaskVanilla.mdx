@@ -1,0 +1,127 @@
+# MetaMask Connect Wallet and API
+
+## MetaMask Vanilla JS
+
+[MetaMask Docs](https://docs.metamask.io/wallet/how-to/get-started-building/set-up-dev-environment/)
+
+```js filename="connect.js"
+// Connect Wallet: Access a user's accounts
+const ethereumButton = document.querySelector(".enableEthereumButton");
+const showAccount = document.querySelector(".showAccount");
+const showChainID = document.querySelector(".showChainID");
+ethereumButton.addEventListener("click", () => {
+  getAccount();
+});
+
+// Detect the MetaMask Ethereum provider
+if (typeof window.ethereum !== "undefined") {
+  console.log("MetaMask is installed!");
+}
+
+// Detect a user's network (Chain ID)
+const chainId = window.ethereum
+  .request({ method: "eth_chainId" })
+  .then(handleChainChanged)
+  .catch((err) => {
+    console.error(err);
+  });
+
+window.ethereum.on("chainChanged", handleChainChanged);
+
+function handleChainChanged(chainId) {
+  showChainID.innerHTML = chainId;
+  console.log("chainID.", chainId);
+}
+
+// Access a user's accounts
+async function getAccount() {
+  const accounts = await window.ethereum
+    .request({ method: "eth_requestAccounts" })
+    .catch((err) => {
+      if (err.code === 4001) {
+        console.log("Please connect to MetaMask.");
+      } else {
+        console.error(err);
+      }
+    });
+  const account = accounts[0];
+  showAccount.innerHTML = account;
+}
+
+// Handle user accounts and accountsChanged
+let currentAccount = null;
+window.ethereum
+  .request({ method: "eth_accounts" })
+  .then(handleAccountsChanged)
+  .catch((err) => {
+    console.error(err);
+  });
+
+window.ethereum.on("accountsChanged", handleAccountsChanged);
+
+function handleAccountsChanged(accounts) {
+  if (accounts.length === 0) {
+    console.log("Please connect to MetaMask.");
+  } else if (accounts[0] !== currentAccount) {
+    currentAccount = accounts[0];
+    showAccount.innerHTML = currentAccount;
+  }
+}
+```
+
+## HTML
+
+```html filename="index.html"
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+  </head>
+  <body>
+    <!-- Display a connect button and the current account -->
+    <button class="enableEthereumButton">Enable Ethereum</button>
+    <h2>Account: <span class="showAccount"></span></h2>
+    <h2>ChainID: <span class="showChainID"></span></h2>
+
+    <script src="./index.js" type="module" defer></script>
+  </body>
+</html>
+```
+
+## Ethereum provider API
+
+[MetaMask provider API](https://docs.metamask.io/wallet/reference/provider-api/)
+
+```ts
+
+// Properties
+// true if the user has MetaMask installed.
+window.ethereum.isMetaMask
+
+
+// Methods
+// checks whether we can make RPC call to the current chain? (not signed RPC call). (eg, false if hardhat localhost is not running)
+window.ethereum.isConnected(): boolean;
+window.ethereum.isConnected() ✅
+
+// method to submit RPC API requests to Ethereum using MetaMask.
+interface RequestArguments {
+  method: string;
+  params?: unknown[] | object;
+}
+
+window.ethereum.request(args: RequestArguments): Promise<unknown>;
+window.ethereum.request({ method: 'eth_requestAccounts' })  ✅
+
+
+// Events
+'accountsChanged'
+'chainChanged'
+'connect'
+'disconnect'
+'message'
+window.ethereum.on('accountsChanged', handler: (accounts: Array<string>) => void);
+```

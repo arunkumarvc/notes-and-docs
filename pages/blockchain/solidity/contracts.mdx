@@ -1,0 +1,193 @@
+# Solidity Smart Contract
+
+## Simple Storage Contract
+
+```solidity filename="simpleStorage.sol"
+
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.19;
+
+// pragma solidity ^0.8.0;
+// pragma solidity >=0.8.0 <0.9.0;
+
+contract SimpleStorage {
+    uint256 myFavoriteNumber;
+
+    struct Person {
+        uint256 favoriteNumber;
+        string name;
+    }
+    // uint256[] public anArray;
+    Person[] public listOfPeople;
+
+    mapping(string => uint256) public nameToFavoriteNumber;
+
+    function store(uint256 _favoriteNumber) public {
+        myFavoriteNumber = _favoriteNumber;
+    }
+
+    function retrieve() public view returns (uint256) {
+        return myFavoriteNumber;
+    }
+
+    function addPerson(string memory _name, uint256 _favoriteNumber) public {
+        listOfPeople.push(Person(_favoriteNumber, _name));
+        nameToFavoriteNumber[_name] = _favoriteNumber;
+    }
+}
+```
+
+## Storage Factory Contract
+
+```solidity filename="raffeDeploy.ts"
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.19;
+
+// import {SimpleStorage, SimpleStorage2} from "./SimpleStorage.sol";
+import {SimpleStorage} from "./SimpleStorage.sol";
+
+contract StorageFactory {
+    SimpleStorage[] public listOfSimpleStorageContracts;
+
+    function createSimpleStorageContract() public {
+        SimpleStorage simpleStorageContractVariable = new SimpleStorage();
+        // SimpleStorage simpleStorage = new SimpleStorage();
+        listOfSimpleStorageContracts.push(simpleStorageContractVariable);
+    }
+
+    function sfStore(
+        uint256 _simpleStorageIndex,
+        uint256 _simpleStorageNumber
+    ) public {
+        // Address
+        // ABI
+        // SimpleStorage(address(simpleStorageArray[_simpleStorageIndex])).store(_simpleStorageNumber);
+        listOfSimpleStorageContracts[_simpleStorageIndex].store(
+            _simpleStorageNumber
+        );
+    }
+
+    function sfGet(uint256 _simpleStorageIndex) public view returns (uint256) {
+        // return SimpleStorage(address(simpleStorageArray[_simpleStorageIndex])).retrieve();
+        return listOfSimpleStorageContracts[_simpleStorageIndex].retrieve();
+    }
+}
+```
+
+## FundMe Contract
+
+```solidity filename="FundMe.sol"
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.20;
+
+import {PriceConverter, AggregatorV3Interface} from "./PriceConverter.sol";
+
+error FundMe__NotOwner();
+error FundMe__NeedMoreETH(uint256 amount, uint256 required);
+error FundMe__CallFailed();
+
+contract FundMe {
+    using PriceConverter for uint256;
+
+    AggregatorV3Interface private _priceFeed;
+    address private immutable _OWNER;
+    uint256 public constant MINIMUM_USD = 50 * 10 ** 18;
+    address[] private _funders;
+    mapping(address => uint256) private _addressToAmountFunded;
+
+    modifier onlyOwner() {
+        if (_OWNER != msg.sender) {
+            revert FundMe__NotOwner();
+        }
+        _;
+    }
+
+    constructor(address priceFeed) {
+        _priceFeed = AggregatorV3Interface(priceFeed);
+        _OWNER = msg.sender;
+    }
+
+    receive() external payable {
+        fund();
+    }
+
+    function fund() public payable {
+        if (msg.value.getConversionRate(_priceFeed) < MINIMUM_USD) {
+            revert FundMe__NeedMoreETH({
+                amount: msg.value.getConversionRate(_priceFeed),
+                required: MINIMUM_USD
+            });
+        }
+        _addressToAmountFunded[msg.sender] += msg.value;
+        _funders.push(msg.sender);
+    }
+
+    function withdraw() public onlyOwner {
+        address[] memory funders = _funders;
+        for (uint256 funderIndex = 0; funderIndex < funders.length; funderIndex++) {
+            address funder = funders[funderIndex];
+            _addressToAmountFunded[funder] = 0;
+        }
+        _funders = new address[](0);
+        (bool success, ) = _OWNER.call{value: address(this).balance}("");
+        if (!success) {
+            revert FundMe__CallFailed();
+        }
+    }
+
+    function getAddressToAmountFunded(address fundingAddress) public view returns (uint256) {
+        return _addressToAmountFunded[fundingAddress];
+    }
+
+    function getFunder(uint256 index) public view returns (address) {
+        return _funders[index];
+    }
+
+    function getOwner() public view returns (address) {
+        return _OWNER;
+    }
+
+    function getPriceFeed() public view returns (AggregatorV3Interface) {
+        return _priceFeed;
+    }
+}
+```
+
+### Failing Recipient Contract
+
+```solidity filename="contracts/tests/FailingRecipient.sol"
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.20;
+
+import {FundMe} from "../FundMe.sol";
+
+error FailingRecipient__CallFailed();
+
+contract FailingRecipient {
+    FundMe private _fundMe;
+
+    constructor(address target) payable {
+        _fundMe = new FundMe(target);
+    }
+
+    function fundEth() public {
+        (bool success, ) = address(_fundMe).call{value: 16 ether}("");
+        if (!success) {
+            revert FailingRecipient__CallFailed();
+        }
+    }
+
+    function withdrawEth() public {
+        _fundMe.withdraw();
+    }
+
+    function getFundMeBalance() public view returns (uint256) {
+        return address(_fundMe).balance;
+    }
+
+    function getFundMeAddress() public view returns (FundMe) {
+        return _fundMe;
+    }
+}
+```
