@@ -1,7 +1,7 @@
 {
   "installation": "Installation",
-  "deployScripts": "Deploy Scripts",
+  "deployScripts": "Deploy",
   "tests": "Tests",
-  "utils": "Helper, Verify and Task",
-  "networkAndPackage": "Network"
+  "utils": "Other",
+  "projects": "Projects"
 }

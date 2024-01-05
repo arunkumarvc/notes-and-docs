@@ -1,0 +1,14 @@
+## Connect Wallet
+
+```ts filename="Connect Wallet"
+const provider = new ethers.providers.Web3Provider(window.ethereum) // v5
+const provider = new ethers.BrowserProvider(window.ethereum); // v6
+
+const signer = await provider.getSigner();
+
+const contract = new ethers.Contract(contractAddress, abi, signer); // v5
+const contract = new ethers.BaseContract((target, abi, runner);) // v6
+
+await window.ethereum.request({ method: "eth_requestAccounts" }); // MetaMask
+await provider.send("eth_requestAccounts", []); // ethers
+```
